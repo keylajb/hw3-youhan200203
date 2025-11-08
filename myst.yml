@@ -2,7 +2,7 @@
 version: 1
 project:
   id: c482832c-c19a-45b9-8316-81438e4573fb
-  title: 'Stat 159 Homework 3, LIGO Tools Tutorial'
+  title: 'Stat159 Homework 3, LIGO Tools Tutorial'
   authors: 
     - name: 'Yoohan Park'
       affiliations : 'University of California, Berkeley'
