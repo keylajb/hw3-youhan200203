@@ -1,0 +1,66 @@
+(copied readligo.py)
+
+I need to make at least two tests but how can I do? I don't know how to make hdf5 file for the test
+
+=> 
+
+If you don’t have a real LIGO file or if you'd like to test with a custom dataset, you can create your own simple .hdf5 file for testing purposes.
+
+Here's a Python code snippet to create a minimal .hdf5 file using h5py (which is already imported in your script):
+
+Example to Create a Test .hdf5 File:
+import numpy as np
+import h5py
+
+# Create some dummy data for testing
+strain_data = np.random.randn(1000)  # 1000 data points
+dq_mask = np.random.randint(0, 2, size=1000)  # Random 0s and 1s for DQ mask
+inj_mask = np.random.randint(0, 2, size=1000)  # Random 0s and 1s for Injection mask
+
+# Create the HDF5 file
+filename = 'test_data.hdf5'
+
+with h5py.File(filename, 'w') as f:
+    # Create a strain dataset
+    strain_group = f.create_group('strain')
+    strain_group.create_dataset('Strain', data=strain_data)
+    strain_group.attrs['Xspacing'] = 1.0  # Sample spacing (in seconds)
+    
+    # Create a quality (DQ) group
+    quality_group = f.create_group('quality')
+    dq_group = quality_group.create_group('simple')
+    dq_group.create_dataset('DQmask', data=dq_mask)
+    dq_group.create_dataset('DQShortnames', data=np.array(['DATA', 'GLITCH'], dtype='S'))
+    
+    # Create the injection group
+    inj_group = quality_group.create_group('injections')
+    inj_group.create_dataset('Injmask', data=inj_mask)
+    inj_group.create_dataset('InjShortnames', data=np.array(['INJECTION'], dtype='S'))
+    
+    # Add meta information
+    meta_group = f.create_group('meta')
+    meta_group.create_dataset('GPSstart', data=1234567890)  # Example GPS start time
+
+print(f"Test HDF5 file '{filename}' created!")
+__________________________________________________
+(ligo) youan@Mac hw3-youhan200203 % pytest ligotools ============================== test session starts =============================== platform darwin -- Python 3.9.23, pytest-8.4.2, pluggy-1.6.0 rootdir: /Users/youan/hw3-youhan200203 configfile: pyproject.toml collected 2 items ligotools/tests/test_ligotools.py FF [100%] ==================================== FAILURES ==================================== _________________________________ test_read_hdf5 _________________________________ def test_read_hdf5(): filename = 'test_data.hdf5' > strain, gpsStart, ts, qmask, shortnameList, injmask, injnameList = readligo.read_hdf5(filename) ligotools/tests/test_ligotools.py:30: _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ligotools/readligo.py:142: in read_hdf5 dataFile = h5py.File(filename, 'r') /opt/miniconda3/envs/ligo/lib/python3.9/site-packages/h5py/_hl/files.py:561: in __init__ fid = make_fid(name, mode, userblock_size, fapl, fcpl, swmr=swmr) /opt/miniconda3/envs/ligo/lib/python3.9/site-packages/h5py/_hl/files.py:235: in make_fid fid = h5f.open(name, flags, fapl=fapl) h5py/_objects.pyx:54: in h5py._objects.with_phil.wrapper ??? h5py/_objects.pyx:55: in h5py._objects.with_phil.wrapper ??? _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ > ??? E FileNotFoundError: [Errno 2] Unable to open file (unable to open file: name = 'test_data.hdf5', errno = 2, error message = 'No such file or directory', flags = 0, o_flags = 0) h5py/h5f.pyx:102: FileNotFoundError _________________________________ test_loaddata __________________________________ def test_loaddata(): filename = 'test_data.hdf5' strain, time, channel_dict = readligo.loaddata(filename,'H1') > assert strain is not None E assert None is not None ligotools/tests/test_ligotools.py:38: AssertionError ============================ short test summary info ============================= FAILED ligotools/tests/test_ligotools.py::test_read_hdf5 - FileNotFoundError: [Errno 2] Unable to open file (unable to open file: name =... FAILED ligotools/tests/test_ligotools.py::test_loaddata - assert None is not None =============================== 2 failed in 6.07s =============================== from ligotools import readligo import numpy as np def create_test_data(): strain_data = np.random.rand(1000) dq_mask = np.random.randint(0, 2, size=1000) inj_mask = np.random.randint(0, 2, size=1000) filename = 'test_data.hdf5' with h5py.File(filename, 'w') as f: strain_group = f.create_group('strain') strain_group.create_dataset('Strain', data=strain_data) strain_group.attrs['Xspacing'] = 1.0 quality_group = f.create_group('quality') dq_group = quality_group.create_group('simple') dq_group.create_dataset('DQmask', data=dq_mask) dq_group.create_dataset('DQShortnames', data=np.array(['DATA', 'GLITCH'], dtype='S')) inj_group = quality_group.create_group('injections') inj_group.create_dataset('Injmask', data=inj_mask) inj_group.create_dataset('InjShortnames', data=np.array(['INJECTION'], dtype='S')) meta_group = f.create_group('meta') meta_group.create_dataset('GPSstart', data=1234567890) def test_read_hdf5(): filename = 'test_data.hdf5' strain, gpsStart, ts, qmask, shortnameList, injmask, injnameList = readligo.read_hdf5(filename) assert strain is not None def test_loaddata(): filename = 'test_data.hdf5' strain, time, channel_dict = readligo.loaddata(filename,'H1') assert strain is not None assert time is not None assert 'DEFAULT' in channel_dict
+
+=> Problem Explanation:
+The create_test_data() function is defined but never called.
+pytest only automatically executes functions that start with test_, so create_test_data() is never executed.
+As a result, the test_data.hdf5 file is not created, leading to a FileNotFoundError.
+
+Key Difference in the Modified Code:
+The version I suggested solves this issue by using pytest's lifecycle hooks to automatically execute the create_test_data() function before the tests run.
+def setup_module(module):
+    # This will be automatically executed before pytest runs the tests in this module.
+    ...  # This is where the test_data.hdf5 file gets created.
+
+And after the tests are done, we automatically remove the file:
+def teardown_module(module):
+    # This will be automatically executed after pytest finishes all the tests.
+    os.remove("test_data.hdf5")
+
+These two functions are special names in pytest that handle setup and teardown tasks. They automatically create the necessary file before tests start, and clean it up after tests are finished.
+
+Let me know if you need anything else!
