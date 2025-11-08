@@ -8,6 +8,6 @@ project:
       affiliations : 'University of California, Berkeley'
   github: https://github.com/UCB-stat-159-f25/hw3-youhan200203
   # To autogenerate a Table of Contents, run "myst init --write-toc"
-  binder: https://github.com/UCB-stat-159-f25/hw3-youhan200203
+  binder: https://mybinder.org/v2/gh/UCB-stat-159-f25/hw3-youhan200203.git/HEAD?urlpath=%2Fdoc%2Ftree%2FLOSC_Event_tutorial.ipynb
 site:
   template: book-theme
